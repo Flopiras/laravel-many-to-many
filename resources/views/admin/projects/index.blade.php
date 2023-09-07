@@ -33,7 +33,7 @@
           <td>
             @if(count($project->technologies)) 
               @foreach($project->technologies as $technology)
-              <span class="badge rounded-pill text-bg-info">{{$technology->label}}</span>
+              <span class="badge rounded-pill text-bg-dark">{{$technology->label}}</span>
               @endforeach
             @else -- @endif
           </td>
