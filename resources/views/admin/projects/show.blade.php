@@ -21,11 +21,11 @@
               <h6 class="text-end me-3"><small class="text-body-secondary"><strong>Tecnologie usate :</strong></h6>
 
                 @if(count($project->technologies)) 
-                  @foreach($project->technologies as $technology)
-                    <ol class="breadcrumb">
-                      <li class="breadcrumb-item"><span class="badge rounded-pill text-bg-secondary">{{$technology->label}}</span></a></li>
-                    </ol>
-                  @endforeach
+                  <ol class="breadcrumb">
+                    @foreach($project->technologies as $technology)
+                      <li class="breadcrumb-item"><span class="badge rounded-pill text-bg-secondary">{{$technology->label}}</span></li>
+                     @endforeach
+                  </ol>
                 @else -- @endif
                 
             </div>
