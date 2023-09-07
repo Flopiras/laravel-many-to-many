@@ -15,8 +15,24 @@
       </div>
       <div class="col-md-8">
         <div class="card-body">
-          {{-- category --}}
-          <h6 class="text-end my-3"><small class="text-body-secondary"><strong>Categoria :</strong> @if($project->type_id) {{ $project->type->label }} @endif</small></h6>
+          <div class="d-flex justify-content-between align-items-baseline">
+            {{-- technologies --}}
+            <div class="d-flex align-items-baseline">
+              <h6 class="text-end me-3"><small class="text-body-secondary"><strong>Tecnologie usate :</strong></h6>
+
+                @if(count($project->technologies)) 
+                  @foreach($project->technologies as $technology)
+                    <ol class="breadcrumb">
+                      <li class="breadcrumb-item"><span class="badge rounded-pill text-bg-secondary">{{$technology->label}}</span></a></li>
+                    </ol>
+                  @endforeach
+                @else -- @endif
+                
+            </div>
+
+            {{-- category --}}
+            <h6 class="text-end my-3"><small class="text-body-secondary"><strong>Categoria :</strong> @if($project->type_id) {{ $project->type->label }} @endif</small></h6>
+          </div>
           <h5 class="card-title">{{ $project->title }}</h5>
           <p class="card-text">{{ $project->content }}</p>
           <p class="card-text"><small class="text-body-secondary">Update : {{ $project->updated_at }}</small></p>
