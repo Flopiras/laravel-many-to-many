@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Technology;
 use App\Models\Type;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,9 @@ class ProjectController extends Controller
     {
         $project = new Project();
         $types = Type::select('id', 'label')->get();
-        return view('admin.projects.create', compact('project', 'types'));
+        $technologies = Technology::select('id', 'label')->get();
+        $project_technology_ids = $project->technologies->pluck('id')->toArray();
+        return view('admin.projects.create', compact('project', 'types', 'technologies', 'project_technology_ids'));
     }
 
     /**
@@ -43,7 +46,8 @@ class ProjectController extends Controller
                 'content' => 'nullable|string',
                 'image' => 'nullable|image',
                 'url' => 'nullable|url',
-                'type_id' => 'nullable|exists:types,id'
+                'type_id' => 'nullable|exists:types,id',
+                'technologies' => 'nullable|exists:technologies,id'
             ],
             [
                 'title.required' => 'Il titolo è obbligatorio',
@@ -51,7 +55,8 @@ class ProjectController extends Controller
                 'title.max:50' => 'Il titolo non può essere più lungo di 50 caratteri',
                 'url.url' => "L'Url deve essere un link valido",
                 'image.image' => "Il file non è valido",
-                'type_id.exists' => 'Il tipo non è valido'
+                'type_id.exists' => 'Il tipo non è valido',
+                'technologies.exists' => 'Una delle tecnologie non è valida'
             ]
         );
 
@@ -67,6 +72,8 @@ class ProjectController extends Controller
         $project->fill($data);
         $project->slug = Str::slug($project->title, '-');
         $project->save();
+
+        if (array_key_exists('technologies', $data)) $project->technologies()->attach($data['technologies']);
 
         return to_route('admin.projects.show', $project)
             ->with('alert-message', 'Progetto aggiunto con successo')
@@ -87,8 +94,10 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         $types = Type::select('id', 'label')->get();
+        $technologies = Technology::select('id', 'label')->get();
+        $project_technology_ids = $project->technologies->pluck('id')->toArray();
 
-        return view('admin.projects.edit', compact('project', 'types'));
+        return view('admin.projects.edit', compact('project', 'types', 'technologies', 'project_technology_ids'));
     }
 
     /**
@@ -103,7 +112,8 @@ class ProjectController extends Controller
                 'content' => 'nullable|string',
                 'image' => 'nullable|image',
                 'url' => 'nullable|url',
-                'type_id' => 'nullable|exists:types,id'
+                'type_id' => 'nullable|exists:types,id',
+                'technologies' => 'nullable|exists:technologies,id'
             ],
             [
                 'title.required' => 'Il titolo è obbligatorio',
@@ -111,7 +121,8 @@ class ProjectController extends Controller
                 'title.max:50' => 'Il titolo non può essere più lungo di 50 caratteri',
                 'url.url' => "L'Url deve essere un link valido",
                 'image.image' => "Il file non è valido",
-                'type_id.exists' => 'Il tipo non è valido'
+                'type_id.exists' => 'Il tipo non è valido',
+                'technologies.exists' => 'Una delle tecnologie non è valida'
             ]
         );
 
@@ -126,6 +137,9 @@ class ProjectController extends Controller
         }
 
         $project->update($data);
+
+        if (count($project->technologies) && !array_key_exists('technologies', $data)) $project->technologies()->detach();
+        elseif (array_key_exists('technologies', $data)) $project->technologies()->sync($data['technologies']);
 
         return to_route('admin.projects.show', $project)
             ->with('alert-message', 'Progetto modificato con successo')
@@ -157,7 +171,10 @@ class ProjectController extends Controller
     public function drop(string $id)
     {
         $project = Project::onlyTrashed()->findOrFail($id);
+
         if ($project->image) Storage::delete($project->image);
+        if (count($project->technologies)) $project->technologies()->detach();
+
         $project->forceDelete();
 
         return to_route('admin.projects.trash')->with('type', 'success')->with('message', 'Il progetto è stato eliminato definitivamente con successo!');
